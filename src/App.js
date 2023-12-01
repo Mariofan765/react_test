@@ -1,36 +1,53 @@
-import React, { useState } from "react";
-import { CSSTransition, TransitionGroup } from "react-transition-group";
+import React, { useState, useRef, useEffect } from "react";
+import BlockInner from "./elements/BlockInner";
+
 import "./styles.css"; // Import your CSS file
 
 function App() {
   const [activeBox, setActiveBox] = useState(null);
+  const [hiddenBoxes, setHiddenBoxes] = useState([]);
+  const timerRef = useRef(null);
+
+  function handleClick(boxId) {
+    setActiveBox(boxId);
+    timerRef.current = setTimeout(() => {
+      setHiddenBoxes([1, 2, 3].filter((id) => id !== boxId));
+    }, 1100);
+  }
+
+  function handleReset(event) {
+    event.stopPropagation();
+    if (timerRef.current) {
+      clearTimeout(timerRef.current);
+      timerRef.current = null;
+    }
+    setActiveBox(null);
+  }
+
+  useEffect(() => {
+    setHiddenBoxes([]);
+  }, [activeBox]);
 
   return (
     <div className="boxes">
-      <TransitionGroup component={null}>
-        {[...Array(4)].map((_, index) => (
-          <CSSTransition
-            key={index}
-            timeout={1000}
-            classNames="box-transition"
-            unmountOnExit // This prop will unmount the component on exit
-            component={null}
-          >
-            <div
-              className={`box ${
-                activeBox === index
-                  ? "active"
-                  : activeBox !== null
-                    ? "inactive"
-                    : ""
-              }`}
-              onClick={() => setActiveBox(activeBox !== index ? index : null)}
+      {[1, 2, 3].map((boxId) => (
+        <div
+          key={boxId}
+          className={`box ${
+            activeBox !== null && activeBox !== boxId ? "inVisible" : ""
+          } ${hiddenBoxes.includes(boxId) ? "hidden" : ""}`}
+          onClick={() => handleClick(boxId)}
+        >
+          <BlockInner title="Вставленный с сервера текст">
+            <button
+              className={`resetForm ${activeBox !== null ? "visible" : ""}`}
+              onClick={handleReset}
             >
-              Click me
-            </div>
-          </CSSTransition>
-        ))}
-      </TransitionGroup>
+              нарисованный крестик
+            </button>
+          </BlockInner>
+        </div>
+      ))}
     </div>
   );
 }
